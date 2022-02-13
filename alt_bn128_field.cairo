@@ -1,31 +1,37 @@
 from bigint import BASE, BigInt3, UnreducedBigInt3, UnreducedBigInt5, nondet_bigint3, bigint_mul
 from alt_bn128_def import P0, P1, P2
 
-# is val = 0 mod n ?
 func verify_zero5{range_check_ptr}(val : UnreducedBigInt5):
     alloc_locals
     local flag
     local q1
     %{
         from starkware.cairo.common.cairo_secp.secp_utils import pack
+        from starkware.cairo.common.math_utils import as_int
 
         P = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
 
-        v3 = ids.val.d3 if ids.val.d3 < PRIME//2 else ids.val.d3 - PRIME
-        v4 = ids.val.d4 if ids.val.d4 < PRIME//2 else ids.val.d4 - PRIME
-        rv = ids.val
-        v = pack(rv, PRIME) + v3*2**258 + v4*2**344
+        v3 = as_int(ids.val.d3, PRIME)
+        v4 = as_int(ids.val.d4, PRIME)
+        v = pack(ids.val, PRIME) + v3*2**258 + v4*2**344
 
         q, r = divmod(v, P)
-        # Since q usually doesn't git bigint_3, divide it again
-        q1, q2 = divmod(q, P)
-        ids.q1 = q1 if q > 0 else 0-q1
-
         assert r == 0, f"verify_zero: Invalid input {ids.val.d0, ids.val.d1, ids.val.d2, ids.val.d3, ids.val.d4}."
-        value = q2 if q > 0 else 0 - q2
+
+        # Since q usually doesn't fit bigint_3, divide it again
         ids.flag = 1 if q > 0 else 0
+        q = q if q > 0 else 0-q
+        q1, q2 = divmod(q, P)
+        ids.q1 = q1
+        value = k = q2
+        #value = value if value > 0 else 0-value
+
         # print(len(f'{value:b}'), f'{value:b}')
-        # print(ids.q1, q2, ids.flag)
+        # print(f'    q={q},{len(bin(q))-2}')
+        # print(f'   q1={ids.q1},{len(bin(ids.q1))-2}')
+        # print(f'   q2={q2},{len(bin(q2))-2}')
+        # print(f'value={value},{len(bin(value))-2}')
+        # print(ids.flag)
     %}
     let (k) = nondet_bigint3()
     let fullk = BigInt3(q1 * P0 + k.d0, q1 * P1 + k.d1, q1 * P2 + k.d2)

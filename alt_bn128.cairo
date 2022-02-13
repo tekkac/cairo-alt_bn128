@@ -2,10 +2,7 @@
 # See information on the curve in secp_def.cairo.
 #
 # The generator point for the ECDSA is:
-#   G = (
-#       0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
-#       0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8
-#   )
+#   G = (0x1, 0x2)
 
 from bigint import BASE, BigInt3, bigint_mul, nondet_bigint3
 from alt_bn128_def import N0, N1, N2
@@ -19,14 +16,14 @@ func mul_s_inv{range_check_ptr}(x : BigInt3, s : BigInt3) -> (res : BigInt3):
         from starkware.cairo.common.cairo_secp.secp_utils import pack
         from starkware.python.math_utils import div_mod, safe_div
 
-        N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
-        x = pack(ids.x, PRIME) % N
-        s = pack(ids.s, PRIME) % N
-        value = res = div_mod(x, s, N)
+        n = 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+        x = pack(ids.x, PRIME) % n
+        s = pack(ids.s, PRIME) % n
+        value = res = div_mod(x, s, n)
     %}
     let (res) = nondet_bigint3()
 
-    %{ value = k = safe_div(res * s - x, N) %}
+    %{ value = k = safe_div(res * s - x, n) %}
     let (k) = nondet_bigint3()
 
     let (res_s) = bigint_mul(res, s)
@@ -91,17 +88,33 @@ func verify_ecdsa{range_check_ptr}(
     validate_signature_entry(r)
     validate_signature_entry(s)
 
-    let gen_pt = EcPoint(
-        BigInt3(0xe28d959f2815b16f81798, 0xa573a1c2c1c0a6ff36cb7, 0x79be667ef9dcbbac55a06),
-        BigInt3(0x554199c47d08ffb10d4b8, 0x2ff0384422a3f45ed1229a, 0x483ada7726a3c4655da4f))
+    let gen_pt : EcPoint = EcPoint(x=BigInt3(1, 0, 0), y=BigInt3(2, 0, 0))
 
+    %{ from starkware.cairo.common.cairo_secp.secp_utils import pack %}
+
+    %{ print("r", pack(ids.r, PRIME)) %}
+    %{ print("s", pack(ids.s, PRIME)) %}
     # Compute u1 and u2.
     let (u1 : BigInt3) = mul_s_inv(msg_hash, s)
+    %{ print("u1", pack(ids.u1, PRIME)) %}
     let (u2 : BigInt3) = mul_s_inv(r, s)
+    %{ print("u2", pack(ids.u2, PRIME)) %}
 
     let (gen_u1) = ec_mul(gen_pt, u1)
+    %{
+        print("gen_u1x", pack(ids.gen_u1.x, PRIME)) 
+        print("gen_u1y", pack(ids.gen_u1.y, PRIME))
+    %}
     let (pub_u2) = ec_mul(public_key_pt, u2)
+    %{
+        print("pub_u2x", pack(ids.pub_u2.x, PRIME)) 
+        print("pub_u2y", pack(ids.pub_u2.y, PRIME))
+    %}
     let (res) = ec_add(gen_u1, pub_u2)
+    %{
+        print("resx", pack(ids.res.x, PRIME)) 
+        print("resy", pack(ids.res.y, PRIME))
+    %}
 
     # The following assert also implies that res is not the zero point.
     assert res.x = r

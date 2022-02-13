@@ -9,6 +9,10 @@ struct EcPoint:
     member y : BigInt3
 end
 
+func G1() -> (res : EcPoint):
+    return (res=EcPoint(BigInt3(1, 0, 0), BigInt3(2, 0, 0)))
+end
+
 # Returns the slope of the elliptic curve at the given point.
 # The slope is used to compute pt + pt.
 # Assumption: pt != 0.
@@ -246,4 +250,41 @@ func ec_mul{range_check_ptr}(pt : EcPoint, scalar : BigInt3) -> (res : EcPoint):
     let (res : EcPoint) = ec_add(res0, res1)
     let (res : EcPoint) = ec_add(res, res2)
     return (res)
+end
+
+struct G2Point:
+    member x0 : BigInt3
+    member x1 : BigInt3
+    member y0 : BigInt3
+    member y1 : BigInt3
+end
+
+struct FQ12:
+    member b0 : BigInt3
+    member b1 : BigInt3
+    member b2 : BigInt3
+    member b3 : BigInt3
+    member b4 : BigInt3
+    member b5 : BigInt3
+    member b6 : BigInt3
+    member b7 : BigInt3
+    member b8 : BigInt3
+    member b9 : BigInt3
+    member bA : BigInt3
+    member bB : BigInt3
+    member bC : BigInt3
+end
+
+struct G12Point:
+    member x : FQ12
+    member y : FQ12
+end
+
+func G2() -> (res : G2Point):
+    return (
+        res=G2Point(
+        x0=BigInt3(0x29e71297e485b7aef312c2, 0x3edcc7ed7497c6a924ccd6, 0x198e9393920d483a7260b),
+        x1=BigInt3(0x1edadd46debd5cd992f6ed, 0x199797111e59d0c8b53dd, 0x1800deef121f1e76426a0),
+        y0=BigInt3(0x338ef355acdadcd122975b, 0x26b5a430ce56f12cc4cdc2, 0x90689d0585ff075ec9e9),
+        y1=BigInt3(0x3d37b4ce6cc0166fa7daa, 0x602372d023f8f479da431, 0x12c85ea5db8c6deb4aab7)))
 end
