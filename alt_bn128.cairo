@@ -6,7 +6,7 @@
 
 from bigint import BASE, BigInt3, bigint_mul, nondet_bigint3
 from alt_bn128_def import N0, N1, N2
-from alt_bn128_ec import EcPoint, ec_add, ec_mul
+from alt_bn128_g1 import G1Point, ec_add, ec_mul
 
 from starkware.cairo.common.math import assert_nn_le, assert_not_zero
 
@@ -77,18 +77,18 @@ func validate_signature_entry{range_check_ptr}(val : BigInt3):
     return ()
 end
 
-# Verifies a Secp256k1 ECDSA signature.
+# Verifies a ECDSA signature.
 # Soundness assumptions:
 # * public_key_pt is on the curve.
 # * All the limbs of public_key_pt.x, public_key_pt.y, msg_hash are in the range [0, 3 * BASE).
 func verify_ecdsa{range_check_ptr}(
-        public_key_pt : EcPoint, msg_hash : BigInt3, r : BigInt3, s : BigInt3):
+        public_key_pt : G1Point, msg_hash : BigInt3, r : BigInt3, s : BigInt3):
     alloc_locals
 
     validate_signature_entry(r)
     validate_signature_entry(s)
 
-    let gen_pt : EcPoint = EcPoint(x=BigInt3(1, 0, 0), y=BigInt3(2, 0, 0))
+    let gen_pt : G1Point = G1Point(x=BigInt3(1, 0, 0), y=BigInt3(2, 0, 0))
 
     %{ from starkware.cairo.common.cairo_secp.secp_utils import pack %}
 

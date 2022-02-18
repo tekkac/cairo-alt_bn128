@@ -1,119 +1,136 @@
-%builtins output range_check
-from starkware.cairo.common.serialize import serialize_word
+%builtins range_check
+from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 from bigint import BigInt3, nondet_bigint3
 from alt_bn128 import verify_ecdsa, mul_s_inv
 from alt_bn128_def import N0, N1, N2, P0, P1, P2
-from alt_bn128_ec import EcPoint, compute_doubling_slope, ec_double, ec_add, ec_mul, G1
-from alt_bn128_pair import linefunc
-from alt_bn128_field import is_zero
+from alt_bn128_field import FQ12, is_zero, fq12_is_zero, fq12_one, fq12_pow_3, fq12_pow_12, fq12_mul
+from alt_bn128_g1 import G1Point, compute_doubling_slope, ec_double, ec_add, ec_mul, g1
+from alt_bn128_g1 import g1_two, g1_three, g1_negone, g1_negtwo, g1_negthree
+from alt_bn128_g2 import G2Point, g2, g2_negone
+from alt_bn128_gt import GTPoint, g12
+from alt_bn128_gt import gt_two, gt_three, gt_negone, gt_negtwo, gt_negthree
+from alt_bn128_pair import g1_linefunc, gt_linefunc, pairing, final_exponentiation
 
-func G1two() -> (res : EcPoint):
-    return (
-        EcPoint(
-        BigInt3(0x71ca8d3c208c16d87cfd3, 0x116da060561765e05aa45a, 0x30644e72e131a029b850),
-        BigInt3(0x138fc7ff3ebf7a5a18a2c4, 0x3e5acaba7029a29a91278d, 0x15ed738c0e0a7c92e7845)))
-end
-
-func G1three() -> (res : EcPoint):
-    return (
-        EcPoint(
-        BigInt3(0x38e679f2d355961915abf0, 0xaf2c6daf4564c57611c56, 0x769bf9ac56bea3ff4023),
-        BigInt3(0x1c5b57cdf1ff3dd9fe2261, 0x2df2342191d4c6798ed02e, 0x2ab799bee0489429554fd)))
-end
-
-func G1negone() -> (res : EcPoint):
-    return (
-        EcPoint(
-        BigInt3(0x1, 0x0, 0x0),
-        BigInt3(0x31ca8d3c208c16d87cfd45, 0x16da060561765e05aa45a1, 0x30644e72e131a029b8504)))
-end
-
-func G1negtwo() -> (res : EcPoint):
-    return (
-        EcPoint(
-        BigInt3(0x71ca8d3c208c16d87cfd3, 0x116da060561765e05aa45a, 0x30644e72e131a029b850),
-        BigInt3(0x1e3ac53ce1cc9c7e645a83, 0x187f3b4af14cbb6b191e14, 0x1a76dae6d3272396d0cbe)))
-end
-
-func G1negthree() -> (res : EcPoint):
-    return (
-        EcPoint(
-        BigInt3(0x38e679f2d355961915abf0, 0xaf2c6daf4564c57611c56, 0x769bf9ac56bea3ff4023),
-        BigInt3(0x156f356e2e8cd8fe7edae6, 0x28e7d1e3cfa1978c1b7573, 0x5acb4b400e90c0063006)))
-end
-
-func linefunc_test{range_check_ptr}():
+func g1_linefunc_test{range_check_ptr}():
     alloc_locals
-    let (local one : EcPoint) = G1()
-    let (two : EcPoint) = G1two()
-    let (three : EcPoint) = G1three()
+    let (one : G1Point) = g1()
+    let (two : G1Point) = g1_two()
+    let (three : G1Point) = g1_three()
 
-    let (negone : EcPoint) = G1negone()
-    let (negtwo : EcPoint) = G1negtwo()
-    let (negthree : EcPoint) = G1negthree()
+    let (negone : G1Point) = g1_negone()
+    let (negtwo : G1Point) = g1_negtwo()
+    let (negthree : G1Point) = g1_negthree()
 
-    # let (two : EcPoint) = ec_double(one)
-    # let (three : EcPoint) = ec_mul(one, BigInt3(3, 0, 0))
+    # too slow
+    # let (two : G1Point) = ec_double(one)
+    # let (three : G1Point) = ec_mul(one, BigInt3(3, 0, 0))
 
-    # let (negone : EcPoint) = ec_mul(one, BigInt3(N0 - 1, N1, N2))
-    # let (negtwo : EcPoint) = ec_mul(one, BigInt3(N0 - 2, N1, N2))
-    # let (negthree : EcPoint) = ec_mul(one, BigInt3(N0 - 3, N1, N2))
+    # let (negone : G1Point) = ec_mul(one, BigInt3(N0 - 1, N1, N2))
+    # let (negtwo : G1Point) = ec_mul(one, BigInt3(N0 - 2, N1, N2))
+    # let (negthree : G1Point) = ec_mul(one, BigInt3(N0 - 3, N1, N2))
 
-    let (val) = linefunc(one, two, one)
+    let (val) = g1_linefunc(one, two, one)
     let (val_is0) = is_zero(val)
     assert val_is0 = 1
-    let (val) = linefunc(one, two, two)
+    let (val) = g1_linefunc(one, two, two)
     let (val_is0) = is_zero(val)
     assert val_is0 = 1
-    let (val) = linefunc(one, two, three)
+    let (val) = g1_linefunc(one, two, three)
     let (val_is0) = is_zero(val)
     assert val_is0 = 0
-    let (val) = linefunc(one, two, negthree)
+    let (val) = g1_linefunc(one, two, negthree)
     let (val_is0) = is_zero(val)
     assert val_is0 = 1
-    let (val) = linefunc(one, negone, one)
+    let (val) = g1_linefunc(one, negone, one)
     let (val_is0) = is_zero(val)
     assert val_is0 = 1
-    let (val) = linefunc(one, negone, two)
+    let (val) = g1_linefunc(one, negone, two)
     let (val_is0) = is_zero(val)
     assert val_is0 = 0
-    let (val) = linefunc(one, negone, negone)
+    let (val) = g1_linefunc(one, negone, negone)
     let (val_is0) = is_zero(val)
     assert val_is0 = 1
-    let (val) = linefunc(one, one, one)
+    let (val) = g1_linefunc(one, one, one)
     let (val_is0) = is_zero(val)
     assert val_is0 = 1
-    let (val) = linefunc(one, one, two)
+    let (val) = g1_linefunc(one, one, two)
     let (val_is0) = is_zero(val)
     assert val_is0 = 0
-    let (val) = linefunc(one, one, negtwo)
+    let (val) = g1_linefunc(one, one, negtwo)
     let (val_is0) = is_zero(val)
     assert val_is0 = 1
-    # assert linefunc(one, two, negthree) ==
-    # assert linefunc(one, negone, one) ==
-    # assert linefunc(one, negone, negone) ==
-    # assert linefunc(one, negone, two) !=
-    # assert linefunc(one, one, one) ==
-    # assert linefunc(one, one, two) !=
-    # assert linefunc(one, one, negtwo) ==
+    let (val) = g1_linefunc(one, two, negthree)
+    let (val_is0) = is_zero(val)
+    assert val_is0 = 1
+    let (val) = g1_linefunc(one, negone, one)
+    let (val_is0) = is_zero(val)
+    assert val_is0 = 1
+    let (val) = g1_linefunc(one, negone, negone)
+    let (val_is0) = is_zero(val)
+    assert val_is0 = 1
+    let (val) = g1_linefunc(one, negone, two)
+    let (val_is0) = is_zero(val)
+    assert val_is0 = 0
+    let (val) = g1_linefunc(one, one, one)
+    let (val_is0) = is_zero(val)
+    assert val_is0 = 1
+    let (val) = g1_linefunc(one, one, two)
+    let (val_is0) = is_zero(val)
+    assert val_is0 = 0
+    let (val) = g1_linefunc(one, one, negtwo)
+    let (val_is0) = is_zero(val)
+    assert val_is0 = 1
+    %{ print("G1 linefunc test passed") %}
     return ()
 end
 
-func main{output_ptr : felt*, range_check_ptr}():
-    # linefunc_test()
+func gt_linefunc_test{range_check_ptr}():
+    alloc_locals
+    let (one : GTPoint) = g12()
+    let (two : GTPoint) = gt_two()
+    let (three : GTPoint) = gt_three()
 
-    %{
-        import sys
-        import os 
-        cwd = os.getcwd()
-        sys.path.append(cwd)
+    let (negone : GTPoint) = gt_negone()
+    let (negtwo : GTPoint) = gt_negtwo()
+    let (negthree : GTPoint) = gt_negthree()
 
-        from tmp.utils.alt_utils import FQ 
-        print(FQ(1337))
-    %}
+    let (val) = gt_linefunc(one, two, one)
+    let (val_is0) = fq12_is_zero(val)
+    assert val_is0 = 1
+    let (val) = gt_linefunc(one, two, two)
+    let (val_is0) = fq12_is_zero(val)
+    assert val_is0 = 1
+    let (val) = gt_linefunc(one, two, three)
+    let (val_is0) = fq12_is_zero(val)
+    assert val_is0 = 0
+    let (val) = gt_linefunc(one, two, negthree)
+    let (val_is0) = fq12_is_zero(val)
+    assert val_is0 = 1
+    let (val) = gt_linefunc(one, negone, one)
+    let (val_is0) = fq12_is_zero(val)
+    assert val_is0 = 1
+    let (val) = gt_linefunc(one, negone, two)
+    let (val_is0) = fq12_is_zero(val)
+    assert val_is0 = 0
+    let (val) = gt_linefunc(one, negone, negone)
+    let (val_is0) = fq12_is_zero(val)
+    assert val_is0 = 1
+    let (val) = gt_linefunc(one, one, one)
+    let (val_is0) = fq12_is_zero(val)
+    assert val_is0 = 1
+    let (val) = gt_linefunc(one, one, two)
+    let (val_is0) = fq12_is_zero(val)
+    assert val_is0 = 0
+    let (val) = gt_linefunc(one, one, negtwo)
+    let (val_is0) = fq12_is_zero(val)
+    assert val_is0 = 1
+    %{ print("GT linefunc test passed") %}
+    return ()
+end
 
-    let public_key_pt = EcPoint(
+func ecdsa_test{range_check_ptr}():
+    let public_key_pt = G1Point(
         BigInt3(0xc505bebf0ed670fa5ae45, 0x36b2ae5bb3ea65786b2adb, 0x1aea85bef3a108a3322fb),
         BigInt3(0x123ebd558a24597cd41241, 0x1e6a1a0d4c134ea9b90bc8, 0x2bda5f6606e99ae96be86))
 
@@ -123,5 +140,72 @@ func main{output_ptr : felt*, range_check_ptr}():
         0x19b120d29c1246446dfdd4, 0x3f1afd887d951181d25adc, 0x51daaedd17508efc249c)
 
     verify_ecdsa(public_key_pt=public_key_pt, msg_hash=msg_hash, r=r, s=s)
+    %{ print("ecdsa test passed") %}
+    return ()
+end
+
+# , bitwise_ptr : BitwiseBuiltin*}():
+func pow_test{range_check_ptr}():
+    alloc_locals
+    let (local g12_tmp) = g12()
+    let n = BigInt3(P0 - 1, P1, P2)
+
+    let (_, res) = fq12_pow_3(g12_tmp.x, n)
+    let (final) = final_exponentiation(g12_tmp.x)
+    %{
+        import sys, os
+        cwd = os.getcwd()
+        sys.path.append(cwd)
+
+        from tmp.utils.bn128_utils import print_fq12, print_g12
+        print_fq12("g12.x", ids.g12_tmp.x)
+        print_fq12("g12.x ** final", ids.final)
+    %}
+    return ()
+end
+
+func pairing_test{range_check_ptr}():
+    alloc_locals
+    let (local pt_g1 : G1Point) = g1()
+    let (local pt_ng1 : G1Point) = g1_negone()
+    let (local pt_g2 : G2Point) = g2()
+    let (local pt_ng2 : G2Point) = g2_negone()
+    let (local p1 : FQ12) = pairing(pt_g2, pt_g1)
+    %{
+        import sys, os
+        cwd = os.getcwd()
+        sys.path.append(cwd)
+
+        from tmp.utils.bn128_field import FQ, FQ12
+        from tmp.utils.bn128_utils import parse_fq12, print_g12
+        res = FQ12(list(map(FQ, parse_fq12(ids.p1))))
+        print("pair(g2, g1) =", res)
+    %}
+    let (local pn1 : FQ12) = pairing(pt_g2, pt_ng1)
+    let (local np1 : FQ12) = pairing(pt_ng2, pt_g1)
+    let (local mul1) = fq12_mul(p1, pn1)
+    let (local mul2) = fq12_mul(p1, np1)
+    %{
+        res_pn1 = FQ12(list(map(FQ, parse_fq12(ids.pn1))))
+        res_np1 = FQ12(list(map(FQ, parse_fq12(ids.np1))))
+        print("pair(g2, -g1) =", res_pn1)
+        print("pair(-g2, g1) =", res_np1)
+        mul1 = FQ12(list(map(FQ, parse_fq12(ids.mul1))))
+        mul2 = FQ12(list(map(FQ, parse_fq12(ids.mul1))))
+        print("pair(g2, g1) * pair(g2, -g1) =", mul1)
+        print("pair(g2, g1) * pair(-g2, g1) =", mul2)
+    %}
+
+    %{ print("pairing test passed") %}
+    return ()
+end
+
+func main{range_check_ptr}():
+    # pow_test()
+    # g1_linefunc_test()
+    # gt_linefunc_test()
+    # ecdsa_test()
+    pairing_test()
+    %{ print("all test passed") %}
     return ()
 end
