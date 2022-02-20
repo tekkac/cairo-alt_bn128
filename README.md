@@ -9,3 +9,6 @@ Make sure you are inside a Cairo virtual environment
 ```
 make
 ```
+
+## TODO
+Hint verifications for pairing-related functions on FQ12
