@@ -274,8 +274,8 @@ func fq12_is_zero{range_check_ptr}(x : FQ12) -> (res : felt):
         cwd = os.getcwd()
         sys.path.append(cwd)
 
-        from tmp.utils.bn128_field import FQ, FQ12
-        from tmp.utils.bn128_utils import parse_fq12
+        from utils.bn128_field import FQ, FQ12
+        from utils.bn128_utils import parse_fq12
 
         val = list(map(FQ, parse_fq12(ids.x)))
 
@@ -354,8 +354,8 @@ func fq12_mul{range_check_ptr}(a : FQ12, b : FQ12) -> (res : FQ12):
         import sys, os
         cwd = os.getcwd()
         sys.path.append(cwd)
-        from tmp.utils.bn128_field import FQ, FQ12
-        from tmp.utils.bn128_utils import parse_fq12, print_g12
+        from utils.bn128_field import FQ, FQ12
+        from utils.bn128_utils import parse_fq12, print_g12
         a = FQ12(list(map(FQ, parse_fq12(ids.a))))
         b = FQ12(list(map(FQ, parse_fq12(ids.b))))
         value = res = list(map(lambda x: x.n, (a*b).coeffs))

@@ -2,7 +2,6 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 from bigint import BigInt3, nondet_bigint3
-from alt_bn128 import verify_ecdsa, mul_s_inv
 from alt_bn128_def import N0, N1, N2, P0, P1, P2
 from alt_bn128_field import FQ12, is_zero, fq12_is_zero, fq12_one, fq12_pow_3, fq12_pow_12, fq12_mul
 from alt_bn128_g1 import G1Point, compute_doubling_slope, ec_double, ec_add, ec_mul, g1
@@ -10,6 +9,7 @@ from alt_bn128_g1 import g1_two, g1_three, g1_negone, g1_negtwo, g1_negthree
 from alt_bn128_g2 import G2Point, g2, g2_negone
 from alt_bn128_gt import GTPoint, g12
 from alt_bn128_gt import gt_two, gt_three, gt_negone, gt_negtwo, gt_negthree
+from alt_bn128_ecdsa import verify_ecdsa, mul_s_inv
 from alt_bn128_pair import gt_linefunc, pairing, final_exponentiation
 
 func gt_linefunc_test{range_check_ptr}():
@@ -83,7 +83,7 @@ func pow_test{range_check_ptr}():
         cwd = os.getcwd()
         sys.path.append(cwd)
 
-        from tmp.utils.bn128_utils import print_fq12, print_g12
+        from utils.bn128_utils import print_fq12, print_g12
         print_fq12("g12.x", ids.g12_tmp.x)
         print_fq12("g12.x ** final", ids.final)
     %}
@@ -118,8 +118,8 @@ func pairing_test{range_check_ptr}():
         cwd = os.getcwd()
         sys.path.append(cwd)
 
-        from tmp.utils.bn128_field import FQ, FQ12
-        from tmp.utils.bn128_utils import parse_fq12, print_g12
+        from utils.bn128_field import FQ, FQ12
+        from utils.bn128_utils import parse_fq12, print_g12
         res = FQ12(list(map(FQ, parse_fq12(ids.p1))))
         print("pair(g2, g1) =", res)
     %}

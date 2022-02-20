@@ -1,5 +1,5 @@
-# Implementation of the ECDSA signature verification over the secp256k1 elliptic curve.
-# See information on the curve in secp_def.cairo.
+# Implementation of the ECDSA signature verification over the alt_bn128 elliptic curve.
+# See information on the curve in alt_bn128_def.cairo.
 #
 # The generator point for the ECDSA is:
 #   G = (0x1, 0x2)

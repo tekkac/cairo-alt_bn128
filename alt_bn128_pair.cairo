@@ -92,8 +92,8 @@ func gt_linehelp{range_check_ptr}(pt0 : GTPoint, pt1 : GTPoint, t : GTPoint, slo
         cwd = os.getcwd()
         sys.path.append(cwd)
 
-        from tmp.utils.bn128_field import FQ, FQ12
-        from tmp.utils.bn128_utils import parse_fq12
+        from utils.bn128_field import FQ, FQ12
+        from utils.bn128_utils import parse_fq12
 
         x1 = FQ12(list(map(FQ, parse_fq12(ids.pt1.x))))
         y1 = FQ12(list(map(FQ, parse_fq12(ids.pt1.y))))
