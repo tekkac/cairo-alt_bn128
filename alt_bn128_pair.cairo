@@ -85,61 +85,6 @@ func get_loop_count_bits(index : felt) -> (bits : felt):
     dw 1
 end
 
-func g1_linehelp{range_check_ptr}(pt0 : G1Point, pt1 : G1Point, t : G1Point, slope : BigInt3) -> (
-        res : BigInt3):
-    %{
-        from starkware.cairo.common.cairo_secp.secp_utils import pack
-        from starkware.python.math_utils import div_mod
-
-        P = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
-        # Compute the point.
-        x1 = pack(ids.pt1.x, PRIME)
-        y1 = pack(ids.pt1.y, PRIME)
-        xt = pack(ids.t.x, PRIME)
-        yt = pack(ids.t.y, PRIME)
-        slope = pack(ids.slope, PRIME)
-
-        value = res = (slope * (xt - x1) - (yt - y1)) % P
-    %}
-    let (res : BigInt3) = nondet_bigint3()
-    let (x_diff_slope : UnreducedBigInt5) = bigint_mul(
-        BigInt3(d0=t.x.d0 - pt1.x.d0, d1=t.x.d1 - pt1.x.d1, d2=t.x.d2 - pt1.x.d2), slope)
-
-    verify_zero5(
-        UnreducedBigInt5(
-        d0=x_diff_slope.d0 - t.y.d0 + pt1.y.d0 - res.d0,
-        d1=x_diff_slope.d1 - t.y.d1 + pt1.y.d1 - res.d1,
-        d2=x_diff_slope.d2 - t.y.d2 + pt1.y.d2 - res.d2,
-        d3=x_diff_slope.d3,
-        d4=x_diff_slope.d4))
-
-    return (res)
-end
-
-# Evaluates the line through pt1 -- pt2 at t
-func g1_linefunc{range_check_ptr}(pt0 : G1Point, pt1 : G1Point, t : G1Point) -> (res : BigInt3):
-    let x_diff = BigInt3(d0=pt0.x.d0 - pt1.x.d0, d1=pt0.x.d1 - pt1.x.d1, d2=pt0.x.d2 - pt1.x.d2)
-    let (same_x : felt) = is_zero(x_diff)
-
-    if same_x == 0:
-        let (slope : BigInt3) = compute_slope(pt0, pt1)
-        let (res : BigInt3) = g1_linehelp(pt0, pt1, t, slope)
-        return (res=res)
-    else:
-        let y_diff = BigInt3(d0=pt0.y.d0 - pt1.y.d0, d1=pt0.y.d1 - pt1.y.d1, d2=pt0.y.d2 - pt1.y.d2)
-        let (same_y : felt) = is_zero(y_diff)
-        if same_y == 1:
-            let (slope : BigInt3) = compute_doubling_slope(pt0)
-            let (res : BigInt3) = g1_linehelp(pt0, pt1, t, slope)
-            return (res=res)
-        else:
-            return (
-                res=BigInt3(
-                d0=t.x.d0 - pt0.x.d0, d1=t.x.d1 - pt0.x.d1, d2=t.x.d2 - pt0.x.d2))
-        end
-    end
-end
-
 func gt_linehelp{range_check_ptr}(pt0 : GTPoint, pt1 : GTPoint, t : GTPoint, slope : FQ12) -> (
         res : FQ12):
     %{
@@ -195,16 +140,8 @@ func gt_linefunc{range_check_ptr}(pt0 : GTPoint, pt1 : GTPoint, t : GTPoint) -> 
     end
 end
 
-# ### TODO PAIRING HELPERS
-
-func miller_loop{range_check_ptr}(Q : GTPoint, P : GTPoint) -> (res : FQ12):
-    alloc_locals
-    let (f : FQ12) = fq12_one()
-    return miller_loop_aux(Q=Q, P=P, R=Q, n=log_ate_loop_count + 1, f=f)
-end
-
-func miller_loop_aux{range_check_ptr}(
-        Q : GTPoint, P : GTPoint, R : GTPoint, n : felt, f : FQ12) -> (res : FQ12):
+func miller_loop{range_check_ptr}(Q : GTPoint, P : GTPoint, R : GTPoint, n : felt, f : FQ12) -> (
+        res : FQ12):
     # END OF LOOP
     if n == 0:
         alloc_locals
@@ -238,20 +175,21 @@ func miller_loop_aux{range_check_ptr}(
     let (local f_sqr_l : FQ12) = fq12_mul(f_sqr, lfRRP)
     let (twoR : GTPoint) = gt_double(R)
     if bit == 0:
-        return miller_loop_aux(Q=Q, P=P, R=twoR, n=n - 1, f=f_sqr_l)
+        return miller_loop(Q=Q, P=P, R=twoR, n=n - 1, f=f_sqr_l)
     else:
         let (local lfRQP : FQ12) = gt_linefunc(twoR, Q, P)
         let (local new_f : FQ12) = fq12_mul(f_sqr_l, lfRQP)
         let (twoRpQ : GTPoint) = gt_add(twoR, Q)
-        return miller_loop_aux(Q=Q, P=P, R=twoRpQ, n=n - 1, f=new_f)
+        return miller_loop(Q=Q, P=P, R=twoRpQ, n=n - 1, f=new_f)
     end
 end
 
 func pairing{range_check_ptr}(Q : G2Point, P : G1Point) -> (res : FQ12):
     alloc_locals
     let (local twisted_Q : GTPoint) = twist(Q)
+    let (local f : FQ12) = fq12_one()
     let (cast_P : GTPoint) = g1_to_gt(P)
-    return miller_loop(twisted_Q, cast_P)
+    return miller_loop(Q=twisted_Q, P=cast_P, R=twisted_Q, n=log_ate_loop_count + 1, f=f)
 end
 
 func final_exponentiation{range_check_ptr}(x : FQ12) -> (res : FQ12):

@@ -25,7 +25,6 @@ func compute_doubling_slope{range_check_ptr}(pt : G1Point) -> (slope : BigInt3):
         x = pack(ids.pt.x, PRIME)
         y = pack(ids.pt.y, PRIME)
         value = slope = div_mod(3 * x ** 2, 2 * y, P)
-        # print(len(f'{x:b}'), len(f'{y:b}'), value, len(f'{value:b}'))
     %}
     let (slope : BigInt3) = nondet_bigint3()
 

@@ -367,15 +367,6 @@ func fq12_mul{range_check_ptr}(a : FQ12, b : FQ12) -> (res : FQ12):
 end
 
 func fq12_pow_inner{range_check_ptr}(x : FQ12, n : felt, m : felt) -> (pow2 : FQ12, res : FQ12):
-    # %{
-    #     import sys, os
-    #     cwd = os.getcwd()
-    #     sys.path.append(cwd)
-
-    # from tmp.utils.bn128_utils import print_fq12
-    #     print_fq12("x", ids.x)
-    #     print(ids.n, ids.m)
-    # %}
     if m == 0:
         assert n = 0
         let (one) = fq12_one()
@@ -418,6 +409,7 @@ func fq12_pow_12{range_check_ptr}(x : FQ12, n : FQ12) -> (res : FQ12):
     let (pow2_8 : FQ12, local res8 : FQ12) = fq12_pow_3(pow2_7, n.e8)
     let (pow2_9 : FQ12, local res9 : FQ12) = fq12_pow_3(pow2_8, n.e9)
     let (pow2_A : FQ12, local resA : FQ12) = fq12_pow_3(pow2_9, n.eA)
+    # Simplifications since eB = 0
     # let (pow2_B : FQ12, local resB : FQ12) = fq12_pow_3(pow2_A, n.eB)
     let (local res01 : FQ12) = fq12_mul(res0, res1)
     let (local res23 : FQ12) = fq12_mul(res2, res3)

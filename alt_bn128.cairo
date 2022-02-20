@@ -78,9 +78,6 @@ func validate_signature_entry{range_check_ptr}(val : BigInt3):
 end
 
 # Verifies a ECDSA signature.
-# Soundness assumptions:
-# * public_key_pt is on the curve.
-# * All the limbs of public_key_pt.x, public_key_pt.y, msg_hash are in the range [0, 3 * BASE).
 func verify_ecdsa{range_check_ptr}(
         public_key_pt : G1Point, msg_hash : BigInt3, r : BigInt3, s : BigInt3):
     alloc_locals
@@ -90,31 +87,13 @@ func verify_ecdsa{range_check_ptr}(
 
     let gen_pt : G1Point = G1Point(x=BigInt3(1, 0, 0), y=BigInt3(2, 0, 0))
 
-    %{ from starkware.cairo.common.cairo_secp.secp_utils import pack %}
-
-    %{ print("r", pack(ids.r, PRIME)) %}
-    %{ print("s", pack(ids.s, PRIME)) %}
     # Compute u1 and u2.
     let (u1 : BigInt3) = mul_s_inv(msg_hash, s)
-    %{ print("u1", pack(ids.u1, PRIME)) %}
     let (u2 : BigInt3) = mul_s_inv(r, s)
-    %{ print("u2", pack(ids.u2, PRIME)) %}
 
     let (gen_u1) = ec_mul(gen_pt, u1)
-    %{
-        print("gen_u1x", pack(ids.gen_u1.x, PRIME)) 
-        print("gen_u1y", pack(ids.gen_u1.y, PRIME))
-    %}
     let (pub_u2) = ec_mul(public_key_pt, u2)
-    %{
-        print("pub_u2x", pack(ids.pub_u2.x, PRIME)) 
-        print("pub_u2y", pack(ids.pub_u2.y, PRIME))
-    %}
     let (res) = ec_add(gen_u1, pub_u2)
-    %{
-        print("resx", pack(ids.res.x, PRIME)) 
-        print("resy", pack(ids.res.y, PRIME))
-    %}
 
     # The following assert also implies that res is not the zero point.
     assert res.x = r

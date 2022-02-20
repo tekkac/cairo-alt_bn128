@@ -31,8 +31,6 @@ end
 # ### ADDITION, MULTIPLICATION
 
 func gt_doubling_slope{range_check_ptr}(pt : GTPoint) -> (slope : FQ12):
-    # Note that y cannot be zero: assume that it is, then pt = -pt, so 2 * pt = 0, which
-    # contradicts the fact that the size of the curve is odd.
     %{
         from tmp.utils.bn128_field import FQ, FQ12
         from tmp.utils.bn128_utils import parse_fq12
@@ -68,8 +66,6 @@ func gt_slope{range_check_ptr}(pt0 : GTPoint, pt1 : GTPoint) -> (slope : FQ12):
     # TODO verify
     return (slope)
 end
-
-# TODO
 
 # Given a point 'pt' on the elliptic curve, computes pt + pt.
 func gt_double{range_check_ptr}(pt : GTPoint) -> (res : GTPoint):
@@ -225,56 +221,7 @@ end
 
 # ### TWISTING G2 INTO GT
 
-func w() -> (res : FQ12):
-    let (zero : BigInt3) = fq_zero()
-    return (
-        res=FQ12(
-        zero, BigInt3(1, 0, 0), zero, zero,
-        zero, zero, zero, zero,
-        zero, zero, zero, zero))
-end
-
-func w_pow2() -> (res : FQ12):
-    let (zero : BigInt3) = fq_zero()
-    return (
-        res=FQ12(
-        zero, zero, BigInt3(1, 0, 0), zero,
-        zero, zero, zero, zero,
-        zero, zero, zero, zero))
-end
-
-func w_pow3() -> (res : FQ12):
-    let (zero : BigInt3) = fq_zero()
-    return (
-        res=FQ12(
-        zero, zero, zero, BigInt3(1, 0, 0),
-        zero, zero, zero, zero,
-        zero, zero, zero, zero))
-end
-
 func twist{range_check_ptr}(P : G2Point) -> (res : GTPoint):
-    alloc_locals
-    tempvar x0 = P.x.e0
-    tempvar x1 = P.x.e1
-
-    let (zero : BigInt3) = fq_zero()
-    let xx = BigInt3(d0=x0.d0 - 9 * x1.d0, d1=x0.d1 - 9 * x1.d1, d2=x0.d2 - 9 * x1.d2)
-    let nx = FQ12(xx, zero, zero, zero, zero, zero, x1, zero, zero, zero, zero, zero)
-    let (w2 : FQ12) = w_pow2()
-    let (local resx : FQ12) = fq12_mul(nx, w2)
-
-    tempvar y0 = P.y.e0
-    tempvar y1 = P.y.e1
-    let (zero : BigInt3) = fq_zero()
-    let yy = BigInt3(d0=y0.d0 - 9 * y1.d0, d1=y0.d1 - 9 * y1.d1, d2=y0.d2 - 9 * y1.d2)
-    let ny = FQ12(yy, zero, zero, zero, zero, zero, y1, zero, zero, zero, zero, zero)
-    let (w3 : FQ12) = w_pow3()
-    let (resy : FQ12) = fq12_mul(ny, w3)
-
-    return (res=GTPoint(x=resx, y=resy))
-end
-
-func twist_fast{range_check_ptr}(P : G2Point) -> (res : GTPoint):
     let (zero : BigInt3) = fq_zero()
     tempvar x0 = P.x.e0
     tempvar x1 = P.x.e1
@@ -293,7 +240,7 @@ end
 # CONSTANTS
 func g12{range_check_ptr}() -> (res : GTPoint):
     let g2_tmp : G2Point = g2()
-    let res : GTPoint = twist_fast(g2_tmp)
+    let res : GTPoint = twist(g2_tmp)
     return (res=res)
 end
 

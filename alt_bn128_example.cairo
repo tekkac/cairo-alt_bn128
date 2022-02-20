@@ -10,80 +10,7 @@ from alt_bn128_g1 import g1_two, g1_three, g1_negone, g1_negtwo, g1_negthree
 from alt_bn128_g2 import G2Point, g2, g2_negone
 from alt_bn128_gt import GTPoint, g12
 from alt_bn128_gt import gt_two, gt_three, gt_negone, gt_negtwo, gt_negthree
-from alt_bn128_pair import g1_linefunc, gt_linefunc, pairing, final_exponentiation
-
-func g1_linefunc_test{range_check_ptr}():
-    alloc_locals
-    let (one : G1Point) = g1()
-    let (two : G1Point) = g1_two()
-    let (three : G1Point) = g1_three()
-
-    let (negone : G1Point) = g1_negone()
-    let (negtwo : G1Point) = g1_negtwo()
-    let (negthree : G1Point) = g1_negthree()
-
-    # too slow
-    # let (two : G1Point) = ec_double(one)
-    # let (three : G1Point) = ec_mul(one, BigInt3(3, 0, 0))
-
-    # let (negone : G1Point) = ec_mul(one, BigInt3(N0 - 1, N1, N2))
-    # let (negtwo : G1Point) = ec_mul(one, BigInt3(N0 - 2, N1, N2))
-    # let (negthree : G1Point) = ec_mul(one, BigInt3(N0 - 3, N1, N2))
-
-    let (val) = g1_linefunc(one, two, one)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, two, two)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, two, three)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 0
-    let (val) = g1_linefunc(one, two, negthree)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, negone, one)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, negone, two)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 0
-    let (val) = g1_linefunc(one, negone, negone)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, one, one)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, one, two)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 0
-    let (val) = g1_linefunc(one, one, negtwo)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, two, negthree)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, negone, one)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, negone, negone)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, negone, two)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 0
-    let (val) = g1_linefunc(one, one, one)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    let (val) = g1_linefunc(one, one, two)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 0
-    let (val) = g1_linefunc(one, one, negtwo)
-    let (val_is0) = is_zero(val)
-    assert val_is0 = 1
-    %{ print("G1 linefunc test passed") %}
-    return ()
-end
+from alt_bn128_pair import gt_linefunc, pairing, final_exponentiation
 
 func gt_linefunc_test{range_check_ptr}():
     alloc_locals
@@ -144,7 +71,6 @@ func ecdsa_test{range_check_ptr}():
     return ()
 end
 
-# , bitwise_ptr : BitwiseBuiltin*}():
 func pow_test{range_check_ptr}():
     alloc_locals
     let (local g12_tmp) = g12()
@@ -160,6 +86,22 @@ func pow_test{range_check_ptr}():
         from tmp.utils.bn128_utils import print_fq12, print_g12
         print_fq12("g12.x", ids.g12_tmp.x)
         print_fq12("g12.x ** final", ids.final)
+    %}
+    return ()
+end
+
+func pairing_benchmark{range_check_ptr}():
+    alloc_locals
+    let (local pt_g1 : G1Point) = g1()
+    let (pt_g2 : G2Point) = g2()
+    %{
+        import time
+        tic = time.perf_counter()
+    %}
+    let (p1 : FQ12) = pairing(pt_g2, pt_g1)
+    %{
+        tac = time.perf_counter()
+        print(f"Pairing computed in {tac - tic:0.4f} seconds")
     %}
     return ()
 end
@@ -202,10 +144,10 @@ end
 
 func main{range_check_ptr}():
     # pow_test()
-    # g1_linefunc_test()
     # gt_linefunc_test()
     # ecdsa_test()
-    pairing_test()
+    pairing_benchmark()
+    # pairing_test()
     %{ print("all test passed") %}
     return ()
 end
