@@ -35,6 +35,17 @@ def parse_fq12(e):
     e8,e9,eA,eB = pack(e.e8), pack(e.e9), pack(e.eA), pack(e.eB)
     return [e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,eA,eB]
 
+def parse_ufq23(e):
+    e00,e01,e02,e03 = pack(e.e00), pack(e.e01), pack(e.e02), pack(e.e03)
+    e04,e05,e06,e07 = pack(e.e04), pack(e.e05), pack(e.e06), pack(e.e07)
+    e08,e09,e0A,e0B = pack(e.e08), pack(e.e09), pack(e.e0A), pack(e.e0B)
+    e0C,e0D,e0E,e0F = pack(e.e0C), pack(e.e0D), pack(e.e0A), pack(e.e0B)
+    e10,e11,e12,e13 = pack(e.e10), pack(e.e11), pack(e.e12), pack(e.e13)
+    e14,e15,e16     = pack(e.e14), pack(e.e15), pack(e.e16)
+    
+    return [e00,e01,e02,e03,e04,e05,e06,e07,e08,e09,e0A,e0B,
+            e0C,e0D,e0E,e0F,e10,e11,e12,e13,e14,e15,e16]
+
 def print_fq12(name, e):
     res = parse_fq12(e)
     print(name, res)

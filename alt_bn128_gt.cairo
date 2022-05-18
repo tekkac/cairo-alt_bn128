@@ -1,7 +1,7 @@
 from bigint import BigInt3, nondet_bigint3, bigint_mul
 from alt_bn128_field import (
     fq_zero, is_zero, FQ12, nondet_fq12, fq12_eq_zero, fq12_sum, fq12_diff, fq12_is_zero, fq12_zero,
-    unreducedFQ12)
+    UnreducedFQ23)
 from alt_bn128_g1 import G1Point
 from alt_bn128_g2 import g2, G2Point
 
@@ -206,7 +206,7 @@ func g1_to_gt{range_check_ptr}(pt : G1Point) -> (res : GTPoint):
     alloc_locals
     let (x_iszero) = is_zero(pt.x)
     let (y_iszero) = is_zero(pt.y)
-    assert x_iszero + y_iszero = 0
+    assert 1 - x_iszero * y_iszero = 0
 
     let (zero : BigInt3) = fq_zero()
     return (

@@ -4,6 +4,7 @@ from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from bigint import BigInt3, nondet_bigint3
 from alt_bn128_def import N0, N1, N2, P0, P1, P2
 from alt_bn128_field import FQ12, is_zero, fq12_is_zero, fq12_one, fq12_pow_3, fq12_pow_12, fq12_mul
+from alt_bn128_field import ufq12_mul, ufq23_12_diff, verify_zero_ufq23
 from alt_bn128_g1 import G1Point, compute_doubling_slope, ec_double, ec_add, ec_mul, g1
 from alt_bn128_g1 import g1_two, g1_three, g1_negone, g1_negtwo, g1_negthree
 from alt_bn128_g2 import G2Point, g2, g2_negone
@@ -11,6 +12,25 @@ from alt_bn128_gt import GTPoint, g12
 from alt_bn128_gt import gt_two, gt_three, gt_negone, gt_negtwo, gt_negthree
 from alt_bn128_ecdsa import verify_ecdsa, mul_s_inv
 from alt_bn128_pair import gt_linefunc, pairing, final_exponentiation
+
+func mulfq12_test{range_check_ptr}():
+    alloc_locals
+    let (local pt : GTPoint) = gt_negthree()
+    let (x_y) = fq12_mul(pt.x, pt.y)
+    let (x_y_unreduced) = ufq12_mul(pt.x, pt.y)
+    let (tmp) = ufq23_12_diff(x_y_unreduced, x_y)
+    %{
+        import sys, os
+        cwd = os.getcwd()
+        sys.path.append(cwd)
+
+        from utils.bn128_utils import print_fq12, parse_fq12
+        print_fq12("g12.x", ids.pt.x)
+        print_fq12("g12.y", ids.pt.y)
+    %}
+    verify_zero_ufq23(tmp)
+    return ()
+end
 
 func gt_linefunc_test{range_check_ptr}():
     alloc_locals
@@ -143,10 +163,11 @@ func pairing_test{range_check_ptr}():
 end
 
 func main{range_check_ptr}():
+    mulfq12_test()
     # pow_test()
     # gt_linefunc_test()
     # ecdsa_test()
-    pairing_benchmark()
+    # pairing_benchmark()
     # pairing_test()
     %{ print("all test passed") %}
     return ()
